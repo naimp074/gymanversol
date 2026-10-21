@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="es-AR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="color-scheme" content="light">
+  <meta name="supported-color-schemes" content="light">
+  <meta name="theme-color" content="#f3efe8">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="description" content="Anversol Gym. Tu gimnasio, conectado.">
+  <title>Anversol · Gestión del gimnasio</title>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <style>
+    html, body, #app { background: #f3efe8; color: #1c1916; color-scheme: light; }
+    .auth-story { display: none; }
+    @media (min-width: 961px) and (pointer: fine) {
+      .auth-story { display: flex; }
+    }
+    @media (max-width: 960px), (hover: none) and (pointer: coarse) {
+      .auth-layout, .auth-form-area, .workspace, main { background: #f3efe8 !important; }
+      .auth-story { display: none !important; }
+      .sidebar { visibility: hidden; transform: translate3d(-110%, 0, 0); }
+    }
+  </style>
+</head>
+<body style="background:#f3efe8;color:#1c1916">
+  <div id="app"><div class="initial-loading"><span class="loading-mark">A</span><p>Preparando tu gimnasio…</p></div></div>
+  <script type="module" src="/src/admin/main.jsx"></script>
+</body>
+</html>
