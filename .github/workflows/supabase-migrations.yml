@@ -32,7 +32,7 @@ jobs:
       - name: Verificar configuración
         run: |
           if [ -z "$SUPABASE_DB_URL" ]; then
-            echo "::error::Falta el secret SUPABASE_DB_URL (Supabase → Connect → Session pooler)."
+            echo "::error::Falta el secret SUPABASE_DB_URL (Supabase → Connect → Direct → Session pooler)."
             exit 1
           fi
 
