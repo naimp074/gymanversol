@@ -63,6 +63,12 @@ a { color: inherit; }
 .gym-tile { width: 34px; height: 34px; border-radius: 10px; display: grid; place-items: center; background: #3a2a24; color: var(--coral-soft); }
 .nav { overflow: auto; flex: 1; padding-right: 4px; }
 .nav-group { margin-bottom: 18px; }
+/* La lista de apartados se desplaza sola con la ruedita; el pie (Configuración) queda fijo abajo. */
+.sidebar > nav { flex: 1 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior: contain; margin: 0 -8px; padding: 0 8px; scrollbar-width: thin; scrollbar-color: #3a322c transparent; }
+.sidebar > nav::-webkit-scrollbar { width: 6px; }
+.sidebar > nav::-webkit-scrollbar-thumb { background: #3a322c; border-radius: 6px; }
+.sidebar > nav::-webkit-scrollbar-track { background: transparent; }
+.sidebar-bottom { flex: none; }
 .nav-label { font-size: 10px; letter-spacing: .18em; color: #8f857c; padding: 0 12px 8px; font-weight: 700; }
 .nav-item { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 12px; text-decoration: none; color: #d9d0c7; position: relative; }
 .nav-item:hover { background: #2a241f; color: #fff; }
