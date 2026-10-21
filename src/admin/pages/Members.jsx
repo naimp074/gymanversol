@@ -1,5 +1,7 @@
 import { useApp, useUi, permissions } from '../context.js';
-import { Empty, Icon, StatusBadge } from '../ui.jsx';
+import { useMemo } from 'react';
+import { Badge, Empty, Icon, StatusBadge } from '../ui.jsx';
+import { attendanceStats } from '../memberStats.js';
 import { MemberCell, useActions } from '../actions.jsx';
 import { exportCsv } from '../exports.js';
 import { date, normalize } from '../../lib/format.js';
@@ -14,6 +16,11 @@ export default function Members() {
   const [filter, setFilter] = useUi('memberFilter');
   const [page, setPage] = useUi('memberPage');
   const query = normalize(search);
+  const constancy = useMemo(() => {
+    const byMember = new Map();
+    for (const c of data.checkins) { if (!byMember.has(c.member_id)) byMember.set(c.member_id, []); byMember.get(c.member_id).push(c); }
+    return new Map(data.members.map(m => [m.id, attendanceStats(byMember.get(m.id) || [], data.today)]));
+  }, [data]);
   const members = data.members.filter(m => (filter === 'todos' || m.status === filter) && [m.name, m.dni, m.phone, m.whatsapp, m.email, m.number].some(v => normalize(v).includes(query)));
   const pages = Math.max(1, Math.ceil(members.length / pageSize));
   const current = Math.min(page, pages - 1);
@@ -31,9 +38,9 @@ export default function Members() {
       </div>
       {members.length ? <>
         <div className="table-wrap"><table className="data-table">
-          <thead><tr><th>Socio</th><th>DNI</th><th>Plan</th><th>Vencimiento</th><th>Estado</th><th></th></tr></thead>
+          <thead><tr><th>Socio</th><th>DNI</th><th>Plan</th><th>Vencimiento</th><th>Estado</th><th>Constancia</th><th></th></tr></thead>
           <tbody>{members.slice(current * pageSize, (current + 1) * pageSize).map(m => <tr key={m.id}>
-            <td><MemberCell member={m} /></td><td className="muted mono">{m.dni}</td><td>{m.plan_name || 'Sin plan'}</td><td>{date(m.expires_at)}</td><td><StatusBadge member={m} /></td>
+            <td><MemberCell member={m} /></td><td className="muted mono">{m.dni}</td><td>{m.plan_name || 'Sin plan'}</td><td>{date(m.expires_at)}</td><td><StatusBadge member={m} /></td><td title={`${constancy.get(m.id).last30} días en los últimos 30`}><Badge tone={constancy.get(m.id).frequency.tone}>{constancy.get(m.id).frequency.label}</Badge></td>
             <td><button type="button" className="icon-btn" aria-label={`Ver ficha de ${m.name}`} onClick={() => memberDetail(m.id)}><Icon name="chevron" size={18} /></button></td>
           </tr>)}</tbody>
         </table></div>

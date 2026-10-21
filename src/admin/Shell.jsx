@@ -20,8 +20,9 @@ import Progress from './pages/Progress.jsx';
 import Reports from './pages/Reports.jsx';
 import Settings from './pages/Settings.jsx';
 import Audit from './pages/Audit.jsx';
+import Finance from './pages/Finance.jsx';
 
-const views = { inicio: Dashboard, socios: Members, accesos: Access, vencimientos: Expiry, asistencia: Attendance, comunicaciones: Communications, planes: Plans, caja: Cash, productos: Products, ventas: Sales, profesores: Teachers, clases: Classes, rutinas: Routines, progreso: Progress, reportes: Reports, configuracion: Settings, auditoria: Audit };
+const views = { inicio: Dashboard, socios: Members, accesos: Access, vencimientos: Expiry, asistencia: Attendance, comunicaciones: Communications, planes: Plans, caja: Cash, productos: Products, ventas: Sales, profesores: Teachers, clases: Classes, rutinas: Routines, progreso: Progress, reportes: Reports, configuracion: Settings, auditoria: Audit, finanzas: Finance };
 
 function ChangePassword() {
   const { user, toast } = useApp();

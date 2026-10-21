@@ -23,6 +23,7 @@ export const pages = {
   accesos: { title: 'Control de acceso', sub: 'Una bienvenida simple. Un registro de cada entrenamiento.', icon: 'door', roles: deskRoles },
   vencimientos: { title: 'Cuotas y vencimientos', nav: 'Vencimientos', sub: 'Anticipate a las renovaciones y mantené a tus socios al día.', icon: 'calendar', roles: financeRoles },
   planes: { title: 'Planes y membresías', sub: 'Una propuesta para cada forma de entrenar.', icon: 'card', roles: financeRoles },
+  finanzas: { title: 'Finanzas', nav: 'Finanzas y gráficos', sub: 'Cuánto entra, cuánto sale y de dónde viene la plata.', icon: 'trending-up', roles: [...adminRoles, 'contador'] },
   caja: { title: 'Caja y movimientos', nav: 'Caja y gastos', sub: 'Los números de tu gimnasio, claros y ordenados.', icon: 'wallet', roles: financeRoles },
   productos: { title: 'Productos y stock', sub: 'Controlá tus productos y anticipá las próximas reposiciones.', icon: 'box', roles: financeRoles },
   ventas: { title: 'Punto de venta', nav: 'Ventas', sub: 'Sumá productos, elegí el medio de pago y registrá la venta.', icon: 'cart', roles: financeRoles },
@@ -39,7 +40,7 @@ export const pages = {
 
 export const navGroups = [
   ['PRINCIPAL', ['inicio', 'socios', 'accesos', 'vencimientos']],
-  ['ADMINISTRACIÓN', ['planes', 'caja', 'productos', 'ventas']],
+  ['ADMINISTRACIÓN', ['planes', 'caja', 'finanzas', 'productos', 'ventas']],
   ['ENTRENAMIENTO', ['profesores', 'clases', 'rutinas', 'progreso', 'asistencia']],
   ['CRECIMIENTO', ['comunicaciones', 'reportes']]
 ];

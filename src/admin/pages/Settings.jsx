@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useApp, permissions, roleLabels } from '../context.js';
 import { Avatar, Badge, Button, Check, Empty, Field, KEEP_OPEN, Modal, SelectField, Table, TextArea } from '../ui.jsx';
-import { rpc, signupClient, staffEmail, friendlyError } from '../../lib/supabase.js';
+import { rpc, signupClient, staffEmail, staffUsername, isEmail, friendlyError } from '../../lib/supabase.js';
 import { downloadBlob } from '../../lib/csv.js';
 
 function SettingsModal({ access }) {
@@ -51,9 +51,10 @@ function UserModal({ account: u }) {
     }
     if (!password) throw new Error('La contraseña es obligatoria.');
     const username = String(fd.get('username') || '').trim().toLowerCase();
+    if (username.includes('@') && !isEmail(username)) throw new Error('El email no es válido.');
     const email = staffEmail(username);
-    await rpc('create_staff_invite', { p: { name: fd.get('name'), username: username.split('@')[0], email, role: fd.get('role') } });
-    const { data: signed, error } = await signupClient().auth.signUp({ email, password, options: { data: { name: fd.get('name'), username } } });
+    await rpc('create_staff_invite', { p: { name: fd.get('name'), username: staffUsername(username), email, role: fd.get('role') } });
+    const { data: signed, error } = await signupClient().auth.signUp({ email, password, options: { data: { name: fd.get('name'), username: staffUsername(username) } } });
     if (error) throw new Error(/already registered/i.test(error.message) ? 'Ya existe una cuenta con ese usuario.' : friendlyError(error));
     if (!signed.session) toast('Supabase tiene activada la confirmación por email: el usuario no podrá entrar hasta desactivarla (Authentication → Sign In / Providers → Email → Confirm email).', 'error');
     const fresh = await refresh();
@@ -70,7 +71,7 @@ function UserModal({ account: u }) {
   return <Modal title={u ? 'Editar usuario' : 'Crear usuario'} wide onSubmit={save}>
     <div className="form-grid">
       <Field label="Nombre y apellido" name="name" defaultValue={u?.name} required maxLength={100} />
-      <Field label="Nombre de usuario" name="username" defaultValue={u?.username} required autoComplete="off" maxLength={60} disabled={Boolean(u)} />
+      <Field label="Usuario o email (ej. tu@gmail.com)" name="username" defaultValue={u ? u.email?.endsWith('@' + (import.meta.env.VITE_STAFF_EMAIL_DOMAIN || 'staff.anversol.app')) ? u.username : u.email : ''} required autoComplete="off" maxLength={250} disabled={Boolean(u)} />
       <SelectField label="Rol de acceso" name="role" defaultValue={u?.role || 'recepcionista'} options={allowedRoles} />
       <Field label={u ? 'Nueva contraseña (opcional)' : 'Contraseña'} name="password" type="password" required={!u} minLength={8} autoComplete="new-password" />
       <Check label="Cuenta activa" name="active" defaultChecked={u?.active !== false} />

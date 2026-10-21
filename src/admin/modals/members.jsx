@@ -7,8 +7,48 @@ import { rpc } from '../../lib/supabase.js';
 import { money, date, time, addDays } from '../../lib/format.js';
 import { readAttachment } from '../../lib/image.js';
 import { qrSvg } from '../../lib/qr.js';
+import { ColumnChart, SERIES, INK, compactMoney } from '../charts.jsx';
+import { attendanceStats, paymentTimeline, monthlyPayments } from '../memberStats.js';
 
 const byDate = list => [...list].sort((a, b) => String(b.date || b.created_at).localeCompare(String(a.date || a.created_at)));
+const days = n => `${n} ${n === 1 ? 'día' : 'días'}`;
+
+function MemberAttendance({ checkins, today }) {
+  const s = attendanceStats(checkins, today);
+  return <>
+    <div className="card-head"><h3 className="section-title">Asistencia</h3><Badge tone={s.frequency.tone}>{s.frequency.label}</Badge></div>
+    <div className="member-progress-stats">
+      <div><span>Últimos 30 días</span><strong>{s.last30}</strong><small>días entrenados</small></div>
+      <div><span>Promedio semanal</span><strong>{s.average.toFixed(1).replace('.', ',')}</strong><small>días por semana</small></div>
+      <div><span>Racha</span><strong>{s.streak}</strong><small>{s.streak === 1 ? 'semana seguida' : 'semanas seguidas'}</small></div>
+      <div><span>Última visita</span><strong>{s.last ? (s.daysSinceLast === 0 ? 'Hoy' : `Hace ${days(s.daysSinceLast)}`) : '—'}</strong><small>{s.last ? date(s.last) : 'Sin visitas'}</small></div>
+    </div>
+    <p className="muted small">Días distintos que vino en cada una de las últimas 12 semanas.</p>
+    <ColumnChart label="Días entrenados por semana" table={false} height={170}
+      data={s.weeks.map(w => ({ key: w.start, label: w.current ? 'Esta' : new Date(`${w.start}T12:00:00`).toLocaleDateString('es-AR', { day: 'numeric', month: 'numeric' }), long: `Semana del ${date(w.start)}`, values: { dias: w.count } }))}
+      series={[{ key: 'dias', label: 'Días', color: SERIES.cuotas }]} format={days} axisFormat={v => String(v)} />
+  </>;
+}
+
+function MemberPayments({ payments, plans, today }) {
+  const t = paymentTimeline(payments);
+  const planName = id => plans.find(x => x.id === id)?.name || 'Membresía';
+  return <>
+    <h3 className="section-title">Pagos</h3>
+    <div className="member-progress-stats">
+      <div><span>Total pagado</span><strong>{money(t.total)}</strong><small>{payments.length} {payments.length === 1 ? 'pago' : 'pagos'}</small></div>
+      <div><span>Renovó a tiempo</span><strong>{t.renewals ? `${t.onTime} de ${t.renewals}` : '—'}</strong><small>{t.renewals ? `${Math.round(t.onTime / t.renewals * 100)}% de las renovaciones` : 'Todavía sin renovaciones'}</small></div>
+      <div><span>Atraso promedio</span><strong>{t.renewals - t.onTime ? days(t.averageLate) : '—'}</strong><small>cuando pagó tarde</small></div>
+      <div><span>Último pago</span><strong>{t.rows[0] ? money(t.rows[0].amount) : '—'}</strong><small>{t.rows[0] ? date(t.rows[0].date) : 'Sin pagos'}</small></div>
+    </div>
+    {payments.length ? <>
+      <ColumnChart label="Pagos por mes" table={false} height={170} data={monthlyPayments(payments, today)} series={[{ key: 'pagos', label: 'Pagado', color: INK }]} format={money} axisFormat={compactMoney} />
+      <div className="table-wrap"><table className="data-table"><thead><tr><th>Fecha</th><th>Plan</th><th>Método</th><th>Importe</th><th>Puntualidad</th></tr></thead>
+        <tbody>{t.rows.map(p => <tr key={p.id}><td>{date(p.date)}</td><td>{planName(p.plan_id)}</td><td>{p.method}</td><td>{money(p.amount)}</td>
+          <td>{p.onTime === null ? <Badge>Primer pago</Badge> : p.onTime ? <Badge tone="green">A tiempo</Badge> : <Badge tone={p.late > 7 ? 'red' : 'amber'}>{`${days(p.late)} tarde`}</Badge>}</td></tr>)}</tbody></table></div>
+    </> : <Empty message="Todavía no hay pagos registrados." />}
+  </>;
+}
 
 export function MemberForm({ id }) {
   const { data, toast } = useApp();
@@ -80,8 +120,8 @@ export function MemberDetail({ id }) {
         <button type="button" className="btn btn-secondary" onClick={() => actions.whatsapp(m.id)}><Icon name="message" size={17} />WhatsApp</button></>}
       <button type="button" className="btn btn-secondary" onClick={() => actions.credential(m.id)}><Icon name="qr" size={17} />Credencial</button>
     </div>
-    {can.finance && <><h3 className="section-title">Historial de pagos</h3>
-      {payments.length ? <div className="table-wrap"><table className="data-table"><thead><tr><th>Fecha</th><th>Plan</th><th>Método</th><th>Importe</th></tr></thead><tbody>{payments.map(p => <tr key={p.id}><td>{date(p.date)}</td><td>{data.plans.find(x => x.id === p.plan_id)?.name || 'Membresía'}</td><td>{p.method}</td><td>{money(p.amount)}</td></tr>)}</tbody></table></div> : <Empty message="Todavía no hay pagos registrados." />}</>}
+    <MemberAttendance checkins={checkins} today={data.today} />
+    {can.finance && <MemberPayments payments={payments} plans={data.plans} today={data.today} />}
     <h3 className="section-title">Últimos ingresos</h3>
     {checkins.length ? <div className="mini-history">{checkins.slice(0, 8).map(c => <div key={c.id}><span>{date(c.date)} · {time(c.date)}</span><Badge tone={c.allowed ? 'green' : 'red'}>{c.allowed ? 'Habilitado' : 'Denegado'}</Badge></div>)}</div> : <Empty message="Todavía no hay ingresos registrados." />}
     <h3 className="section-title">Rutinas</h3>

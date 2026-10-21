@@ -8,7 +8,7 @@ import { subscribeChanges } from '../lib/realtime.js';
 
 const initialUi = () => ({
   chartDays: 7, dashboardAlert: 'due', memberSearch: '', memberFilter: 'todos', memberPage: 0, accessFilter: 'todos', accessResult: null,
-  communicationType: 'recordatorio', cart: {}, productSearch: '', saleSearch: '', saleMethod: 'Efectivo', cashPeriod: 'today',
+  communicationType: 'recordatorio', financeMonths: 6, cart: {}, productSearch: '', saleSearch: '', saleMethod: 'Efectivo', cashPeriod: 'today',
   classDate: '', progressMember: '', reportRange: null, reportType: 'movements', auditSearch: ''
 });
 

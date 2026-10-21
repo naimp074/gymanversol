@@ -14,6 +14,10 @@ export const staffEmail = value => {
   return text.includes('@') ? text : `${text}@${domain}`;
 };
 
+// Nombre visible del usuario: el propio usuario, o la parte antes de la @ si entra con su email.
+export const staffUsername = value => String(value || '').trim().toLowerCase().split('@')[0].replace(/[^a-z0-9_.-]/g, '');
+export const isEmail = value => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(value || '').trim());
+
 // Cliente aparte para crear cuentas de personal sin reemplazar la sesión actual.
 export function signupClient() {
   return createClient(url, key, { auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false, storageKey: 'anversol-signup' } });
