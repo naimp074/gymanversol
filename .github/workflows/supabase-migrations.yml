@@ -1,5 +1,5 @@
 # Aplica en Supabase las migraciones nuevas de supabase/migrations/ cada vez que llegan a main.
-# Se conecta directo a la base, sin token de la API de Supabase.
+# Se conecta a la base por el Session pooler (IPv4), sin token de la API de Supabase.
 #
 # Secret necesario (Settings → Secrets and variables → Actions):
 #   SUPABASE_DB_URL · Supabase → botón "Connect" → "Session pooler" → URI, con la contraseña real
