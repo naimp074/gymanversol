@@ -38,3 +38,8 @@
 .member-progress-stats strong { font-size: 20px; color: var(--ink); }
 .member-progress-stats small { color: var(--muted); font-size: 11px; }
 @media (max-width: 640px) { .viz-bar-row { grid-template-columns: 1fr auto; } .viz-bar-track { grid-column: 1 / -1; grid-row: 2; } }
+.section-picker { border: 1px solid var(--line); border-radius: 14px; padding: 14px 16px; display: grid; gap: 10px; margin: 0; }
+.section-picker legend { padding: 0 6px; font-weight: 600; color: var(--ink); }
+.section-picker-actions { display: flex; gap: 8px; }
+.section-picker-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 6px 14px; }
+.section-picker-grid .checkbox-field { margin: 0; }

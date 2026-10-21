@@ -45,7 +45,7 @@ export default function Cash() {
   const app = useApp();
   const { data, user, openModal, toast } = app;
   const [period, setPeriod] = useUi('cashPeriod');
-  if (!permissions(user.role).finance) return <Empty message="Tu perfil no tiene acceso a esta sección." />;
+  if (!permissions(user).finance) return <Empty message="Tu perfil no tiene acceso a esta sección." />;
   const session = activeCash(data);
   const movements = data.movements.filter(m => period === 'all' || (period === 'month' ? localDay(m.date).slice(0, 7) === data.today.slice(0, 7) : localDay(m.date) === data.today));
   const income = total(movements.filter(m => m.type === 'ingreso'));

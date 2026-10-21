@@ -32,7 +32,7 @@ function classify(movements) {
 export default function Finance() {
   const { data, user } = useApp();
   const [months, setMonths] = useUi('financeMonths');
-  if (!permissions(user.role).audit) return <Empty message="Tu perfil no tiene acceso a esta sección." />;
+  if (!permissions(user).audit) return <Empty message="Tu perfil no tiene acceso a esta sección." />;
 
   const keys = Array.from({ length: months }, (_, i) => monthKey(data.today, months - 1 - i));
   const previousKeys = Array.from({ length: months }, (_, i) => monthKey(data.today, 2 * months - 1 - i));

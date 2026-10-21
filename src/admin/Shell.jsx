@@ -1,4 +1,4 @@
-import { useApp, pages, navGroups, roleLabels, permissions, financeRoles } from './context.js';
+import { useApp, pages, navGroups, roleLabels, permissions, canSee } from './context.js';
 import { Avatar, Field, Icon, Logo, Modal } from './ui.jsx';
 import { useActions } from './actions.jsx';
 import { dueSoon, isBirthday } from './pages/shared.jsx';
@@ -50,7 +50,7 @@ function Profile() {
     <div className="member-inline"><Avatar person={user} /><div><h3>{user.name}</h3><p className="muted">{roleLabels[user.role]} · {user.username}</p></div></div>
     <p className="muted">Tu usuario queda registrado en las operaciones que realizás.</p>
     <div className="stack">
-      {permissions(user.role).desk && <p className="muted small">Atajo: F2 abre el control de acceso.</p>}
+      {permissions(user).checkin && <p className="muted small">Atajo: F2 abre el control de acceso.</p>}
       <button type="button" className="btn btn-secondary" onClick={() => openModal(<ChangePassword />)}><Icon name="lock" size={18} />Cambiar contraseña</button>
       <button type="button" className="btn btn-secondary" onClick={logout}><Icon name="logout" size={18} />Cerrar sesión</button>
     </div>
@@ -61,7 +61,7 @@ export default function Shell({ kiosk, setKiosk, setNavOpen }) {
   const app = useApp();
   const { data, user, route, navigate, openModal } = app;
   const actions = useActions();
-  const can = permissions(user.role);
+  const can = permissions(user);
   const page = pages[route];
   const View = views[route];
   const due = dueSoon(data);
@@ -76,15 +76,15 @@ export default function Shell({ kiosk, setKiosk, setNavOpen }) {
       <a href="#inicio" className="brand" onClick={go('inicio')} aria-label="Anversol inicio"><Logo /></a>
       <div className="gym-selector"><span className="gym-tile"><Icon name="dumbbell" size={19} /></span><span><strong>{data.settings.gym_name || 'Anversol Gym'}</strong><small>Sede principal</small></span><Icon name="down" size={15} /></div>
       <nav aria-label="Navegación principal">{navGroups.map(([title, routes]) => {
-        const available = routes.filter(r => pages[r].roles.includes(user.role));
+        const available = routes.filter(r => canSee(user, r));
         if (!available.length) return null;
         return <div key={title} className="nav-group"><div className="nav-label">{title}</div>{available.map(r => <a key={r} className={`nav-item ${route === r ? 'active' : ''}`} href={`#${r}`} onClick={go(r)} aria-current={route === r ? 'page' : undefined}>
           <Icon name={pages[r].icon} size={19} /><span>{pages[r].nav || pages[r].title}</span>{r === 'vencimientos' && due.length > 0 && <b className="nav-count">{due.length}</b>}
         </a>)}</div>;
       })}</nav>
       <div className="sidebar-bottom">
-        {pages.configuracion.roles.includes(user.role) && <a href="#configuracion" onClick={go('configuracion')} className={`nav-item ${route === 'configuracion' ? 'active' : ''}`}><Icon name="settings" size={18} />Configuración</a>}
-        {pages.auditoria.roles.includes(user.role) && <a href="#auditoria" onClick={go('auditoria')} className={`nav-item ${route === 'auditoria' ? 'active' : ''}`}><Icon name="shield" size={18} />Actividad del sistema</a>}
+        {canSee(user, 'configuracion') && <a href="#configuracion" onClick={go('configuracion')} className={`nav-item ${route === 'configuracion' ? 'active' : ''}`}><Icon name="settings" size={18} />Configuración</a>}
+        {canSee(user, 'auditoria') && <a href="#auditoria" onClick={go('auditoria')} className={`nav-item ${route === 'auditoria' ? 'active' : ''}`}><Icon name="shield" size={18} />Actividad del sistema</a>}
         <div className="local-status"><i className="status-dot"></i><span>Conectado a la nube<small>Datos sincronizados con Supabase</small></span></div>
       </div>
     </aside>
@@ -94,7 +94,7 @@ export default function Shell({ kiosk, setKiosk, setNavOpen }) {
         <div className="breadcrumb">Tu gimnasio <span>/</span> <strong>{page.title}</strong></div>
         <div className="topbar-right">
           {data.settings.demo && <span className="demo-label">Datos de demostración</span>}
-          <button type="button" className={`icon-btn notification-btn ${alerts ? 'has-alerts' : ''}`} onClick={() => navigate(financeRoles.includes(user.role) ? 'vencimientos' : 'asistencia')} aria-label="Ver alertas"><Icon name="bell" /><i></i></button>
+          <button type="button" className={`icon-btn notification-btn ${alerts ? 'has-alerts' : ''}`} onClick={() => navigate(canSee(user, 'vencimientos') ? 'vencimientos' : 'asistencia')} aria-label="Ver alertas"><Icon name="bell" /><i></i></button>
           <div className="topbar-divider"></div>
           <button type="button" className="profile-button" onClick={() => openModal(<Profile />)}><Avatar person={user} /><span><strong>{user.name}</strong><small>{roleLabels[user.role]}</small></span><Icon name="down" size={14} /></button>
         </div>

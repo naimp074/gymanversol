@@ -7,7 +7,7 @@ import { date, addDays } from '../../lib/format.js';
 export default function Expiry() {
   const { data, user } = useApp();
   const actions = useActions();
-  const canDesk = permissions(user.role).desk;
+  const canDesk = permissions(user).pay;
   const expired = data.members.filter(m => m.status === 'vencido');
   const today = data.members.filter(m => m.days_left === 0 && m.state === 'activo');
   const tomorrow = data.members.filter(m => m.days_left === 1 && m.state === 'activo');

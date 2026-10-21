@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useApp, permissions, roleLabels } from '../context.js';
+import { useApp, permissions, roleLabels, pages, roleSections } from '../context.js';
 import { Avatar, Badge, Button, Check, Empty, Field, KEEP_OPEN, Modal, SelectField, Table, TextArea } from '../ui.jsx';
 import { rpc, signupClient, staffEmail, staffUsername, isEmail, friendlyError } from '../../lib/supabase.js';
 import { downloadBlob } from '../../lib/csv.js';
@@ -37,14 +37,41 @@ function SettingsModal({ access }) {
   </Modal>;
 }
 
-function UserModal({ account: u }) {
-  const { user, data, toast, refresh } = useApp();
+// Apartados que se pueden elegir (Vista general siempre está visible).
+const choosable = role => roleSections(role).filter(key => key !== 'inicio');
+const sectionLabel = key => pages[key].nav || pages[key].title;
+
+function SectionPicker({ role, selected, onChange }) {
+  const options = choosable(role);
+  if (role === 'dueno') return <p className="muted full">El dueño ve todos los apartados.</p>;
+  const toggle = key => onChange(selected.includes(key) ? selected.filter(k => k !== key) : [...selected, key]);
+  return <fieldset className="full section-picker">
+    <legend>Apartados que puede ver <span className="muted">({selected.length} de {options.length})</span></legend>
+    <div className="section-picker-actions">
+      <button type="button" className="btn btn-sm btn-secondary" onClick={() => onChange(options)}>Todos</button>
+      <button type="button" className="btn btn-sm btn-secondary" onClick={() => onChange([])}>Ninguno</button>
+    </div>
+    <div className="section-picker-grid">{options.map(key => <label key={key} className="checkbox-field">
+      <input type="checkbox" checked={selected.includes(key)} onChange={() => toggle(key)} /><span>{sectionLabel(key)}</span>
+    </label>)}</div>
+    <p className="muted small">Vista general siempre está visible. Lo que no se tilda no aparece en el menú y la base tampoco le entrega esos datos. Para habilitar apartados que no figuran acá, cambiá el rol.</p>
+  </fieldset>;
+}
+
+export function UserModal({ account: u }) {
+  const { user, toast, refresh } = useApp();
   const allowedRoles = Object.entries(roleLabels).filter(([value]) => user.role === 'dueno' || value !== 'dueno' || u?.role === 'dueno').map(([value, label]) => ({ value, label }));
+  const [role, setRole] = useState(u?.role || 'recepcionista');
+  const [sections, setSections] = useState(() => (u?.effective_sections || roleSections(role)).filter(key => key !== 'inicio'));
+  const changeRole = next => { setRole(next); setSections(choosable(next)); };
+  // Todos tildados = "todos los del rol" (null): si se agrega un apartado nuevo al sistema, lo ve.
+  const payloadSections = () => role === 'dueno' || choosable(role).every(key => sections.includes(key)) ? null : sections;
+
   async function save(fd) {
     const password = fd.get('password') || '';
     if (password && password.length < 8) throw new Error('La contraseña debe tener al menos 8 caracteres.');
     if (u) {
-      await rpc('save_user', { p_id: u.id, p: { name: fd.get('name'), role: fd.get('role'), active: fd.has('active') } });
+      await rpc('save_user', { p_id: u.id, p: { name: fd.get('name'), role, active: fd.has('active'), sections: payloadSections() } });
       if (password) await rpc('admin_set_password', { p_user: u.id, p_password: password });
       toast('Usuario guardado.');
       return;
@@ -53,27 +80,27 @@ function UserModal({ account: u }) {
     const username = String(fd.get('username') || '').trim().toLowerCase();
     if (username.includes('@') && !isEmail(username)) throw new Error('El email no es válido.');
     const email = staffEmail(username);
-    await rpc('create_staff_invite', { p: { name: fd.get('name'), username: staffUsername(username), email, role: fd.get('role') } });
+    await rpc('create_staff_invite', { p: { name: fd.get('name'), username: staffUsername(username), email, role } });
     const { data: signed, error } = await signupClient().auth.signUp({ email, password, options: { data: { name: fd.get('name'), username: staffUsername(username) } } });
     if (error) throw new Error(/already registered/i.test(error.message) ? 'Ya existe una cuenta con ese usuario.' : friendlyError(error));
     if (!signed.session) toast('Supabase tiene activada la confirmación por email: el usuario no podrá entrar hasta desactivarla (Authentication → Sign In / Providers → Email → Confirm email).', 'error');
     const fresh = await refresh();
-    if (!fresh?.users?.some(item => item.email === email)) {
+    const created = fresh?.users?.find(item => item.email === email);
+    if (!created) {
       toast('La cuenta se creó, pero no quedó habilitada. Revisá que la confirmación por email esté desactivada en Supabase.', 'error');
       return KEEP_OPEN;
     }
-    if (!fd.has('active')) {
-      const created = fresh.users.find(item => item.email === email);
-      await rpc('save_user', { p_id: created.id, p: { active: false } });
-    }
+    if (!fd.has('active') || payloadSections()) await rpc('save_user', { p_id: created.id, p: { active: fd.has('active'), sections: payloadSections() } });
     toast('Usuario creado. Compartí las credenciales de manera privada.');
   }
+
   return <Modal title={u ? 'Editar usuario' : 'Crear usuario'} wide onSubmit={save}>
     <div className="form-grid">
       <Field label="Nombre y apellido" name="name" defaultValue={u?.name} required maxLength={100} />
       <Field label="Usuario o email (ej. tu@gmail.com)" name="username" defaultValue={u ? u.email?.endsWith('@' + (import.meta.env.VITE_STAFF_EMAIL_DOMAIN || 'staff.anversol.app')) ? u.username : u.email : ''} required autoComplete="off" maxLength={250} disabled={Boolean(u)} />
-      <SelectField label="Rol de acceso" name="role" defaultValue={u?.role || 'recepcionista'} options={allowedRoles} />
+      <SelectField label="Rol de acceso" name="role" value={role} onChange={e => changeRole(e.target.value)} options={allowedRoles} />
       <Field label={u ? 'Nueva contraseña (opcional)' : 'Contraseña'} name="password" type="password" required={!u} minLength={8} autoComplete="new-password" />
+      <SectionPicker role={role} selected={sections} onChange={setSections} />
       <Check label="Cuenta activa" name="active" defaultChecked={u?.active !== false} />
       <p className="muted full">Usá al menos 8 caracteres. Compartí las credenciales de manera privada. No se puede desactivar al último dueño.{u ? ' El nombre de usuario no se puede cambiar.' : ''}</p>
     </div>
@@ -83,7 +110,7 @@ function UserModal({ account: u }) {
 export default function Settings() {
   const { data, user, openModal, toast } = useApp();
   const [busy, setBusy] = useState(false);
-  if (!permissions(user.role).admin) return <Empty message="Tu perfil no tiene acceso a esta sección." />;
+  if (!permissions(user).admin) return <Empty message="Tu perfil no tiene acceso a esta sección." />;
   const s = data.settings;
   const origin = location.origin;
 
@@ -120,8 +147,8 @@ export default function Settings() {
     </div>
     <section className="card">
       <div className="card-head"><div><h3 className="card-title">Usuarios y permisos</h3><p className="muted">Cada persona accede con su propia cuenta.</p></div><Button className="btn-primary btn-sm" icon="plus" onClick={() => openModal(<UserModal />)}>Crear usuario</Button></div>
-      <Table headers={['Usuario', 'Acceso', 'Rol', 'Estado', '']} rows={data.users.map(u => <tr key={u.id}>
-        <td><div className="member-inline"><Avatar person={u} /><strong>{u.name}</strong></div></td><td>{u.username}</td><td>{roleLabels[u.role] || u.role}</td>
+      <Table headers={['Usuario', 'Acceso', 'Rol', 'Apartados', 'Estado', '']} rows={data.users.map(u => <tr key={u.id}>
+        <td><div className="member-inline"><Avatar person={u} /><strong>{u.name}</strong></div></td><td>{u.username}</td><td>{roleLabels[u.role] || u.role}</td><td>{u.role === 'dueno' || !u.sections ? 'Todos' : `${u.effective_sections.length - 1} de ${choosable(u.role).length}`}</td>
         <td><Badge tone={u.active === false ? 'neutral' : 'green'}>{u.active === false ? 'Inactivo' : 'Activo'}</Badge></td>
         <td>{user.role === 'dueno' || u.role !== 'dueno' ? <Button className="btn-secondary btn-sm" onClick={() => openModal(<UserModal account={u} />)}>Editar</Button> : <Badge>Solo el dueño</Badge>}</td>
       </tr>)} />

@@ -5,7 +5,7 @@ import { fullDate } from '../../lib/format.js';
 export default function Audit() {
   const { data, user } = useApp();
   const [search, setSearch] = useUi('auditSearch');
-  if (!permissions(user.role).audit) return <Empty message="Tu perfil no tiene acceso a esta sección." />;
+  if (!permissions(user).audit) return <Empty message="Tu perfil no tiene acceso a esta sección." />;
   const query = search.toLocaleLowerCase('es');
   const logs = data.audit.filter(a => `${a.user_name} ${a.action} ${a.detail}`.toLocaleLowerCase('es').includes(query));
   return <>

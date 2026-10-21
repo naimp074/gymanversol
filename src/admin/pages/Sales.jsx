@@ -18,12 +18,12 @@ function VoidSale({ id }) {
 export default function Sales() {
   const app = useApp();
   const { data, user, toast, refresh, navigate, openModal } = app;
-  const can = permissions(user.role);
+  const can = permissions(user);
   const [cart, setCart] = useUi('cart');
   const [search, setSearch] = useUi('saleSearch');
   const [method, setMethod] = useUi('saleMethod');
   const [busy, setBusy] = useState(false);
-  if (!can.finance) return <Empty message="Tu perfil no tiene acceso a esta sección." />;
+  if (!can.financeRole) return <Empty message="Tu perfil no tiene acceso a esta sección." />;
   const session = activeCash(data);
   const products = data.products.filter(p => p.active !== false && productMatches(p, search));
   const items = Object.entries(cart).map(([id, quantity]) => ({ product: data.products.find(p => p.id === id), quantity })).filter(item => item.product && item.quantity > 0);

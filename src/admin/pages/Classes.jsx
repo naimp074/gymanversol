@@ -24,7 +24,7 @@ function ClassModal({ cls: c }) {
 
 function Reservations({ classId }) {
   const { data, user, toast, refresh } = useApp();
-  const can = permissions(user.role);
+  const can = permissions(user);
   const c = data.classes.find(item => item.id === classId);
   if (!c) return null;
   const reservations = data.reservations.filter(r => r.class_id === classId);
@@ -45,7 +45,7 @@ function Reservations({ classId }) {
 
 export default function Classes() {
   const { data, user, openModal, toast } = useApp();
-  const can = permissions(user.role);
+  const can = permissions(user);
   const [classDate, setClassDate] = useUi('classDate');
   const classes = data.classes.filter(c => !classDate || c.date === classDate).sort((a, b) => `${a.date}${a.time}`.localeCompare(`${b.date}${b.time}`));
   const upcoming = classes.filter(c => c.date >= data.today);

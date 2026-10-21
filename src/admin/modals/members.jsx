@@ -89,7 +89,7 @@ export function MemberForm({ id }) {
 export function MemberDetail({ id }) {
   const { data, user, toast } = useApp();
   const actions = useActions();
-  const can = permissions(user.role);
+  const can = permissions(user);
   const m = data.members.find(x => x.id === id);
   if (!m) return null;
   const payments = byDate(data.payments.filter(p => p.member_id === id));
@@ -116,8 +116,8 @@ export function MemberDetail({ id }) {
     {m.has_medical_file && <button type="button" className="btn btn-secondary" onClick={downloadMedical}><Icon name="download" size={16} />Descargar certificado</button>}
     {m.notes && <div className="info-box"><p>{m.notes}</p></div>}
     <div className="row-actions member-detail-actions">
-      {can.desk && <><button type="button" className="btn btn-primary" onClick={() => actions.payment(m.id)}><Icon name="wallet" size={17} />Registrar pago</button>
-        <button type="button" className="btn btn-secondary" onClick={() => actions.whatsapp(m.id)}><Icon name="message" size={17} />WhatsApp</button></>}
+      {can.pay && <button type="button" className="btn btn-primary" onClick={() => actions.payment(m.id)}><Icon name="wallet" size={17} />Registrar pago</button>}
+      {can.desk && <button type="button" className="btn btn-secondary" onClick={() => actions.whatsapp(m.id)}><Icon name="message" size={17} />WhatsApp</button>}
       <button type="button" className="btn btn-secondary" onClick={() => actions.credential(m.id)}><Icon name="qr" size={17} />Credencial</button>
     </div>
     <MemberAttendance checkins={checkins} today={data.today} />
@@ -151,7 +151,7 @@ export function PaymentForm({ id }) {
   if (!cashOpen) return <CashClosed />;
   if (!ready) return null;
 
-  const isAdmin = permissions(user.role).admin;
+  const isAdmin = permissions(user).admin;
   const m = members.find(x => x.id === memberId);
   const p = plans.find(x => x.id === planId);
   const total = p ? Math.round(p.price * (1 - (Number(p.discount) || 0) / 100) * (1 - (Number(discount) || 0) / 100)) : 0;

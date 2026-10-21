@@ -17,7 +17,7 @@ export default function Reports() {
   const from = range?.from || `${data.today.slice(0, 7)}-01`;
   const to = range?.to || data.today;
   const [draft, setDraft] = useState({ from, to, type });
-  if (!permissions(user.role).finance) return <Empty message="Tu perfil no tiene acceso a esta sección." />;
+  if (!permissions(user).finance) return <Empty message="Tu perfil no tiene acceso a esta sección." />;
 
   const inRange = value => { const day = localDay(value); return day >= from && day <= to; };
   const movements = data.movements.filter(m => inRange(m.date));

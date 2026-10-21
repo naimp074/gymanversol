@@ -15,7 +15,7 @@ function Clock() {
 export default function Access() {
   const { data, user, ui, toast, refresh, openModal } = useApp();
   const actions = useActions();
-  const can = permissions(user.role);
+  const can = permissions(user);
   const [filter, setFilter] = useUi('accessFilter');
   const [result, setResult] = useState(ui.accessResult);
   const [busy, setBusy] = useState(false);
@@ -84,7 +84,7 @@ export default function Access() {
           {isBirthday(m, data.today) && <p>🎂 ¡Hoy es tu cumpleaños!</p>}
           {m.medical_expires_at && m.medical_expires_at < data.today && <p className="amber-text">Apto físico vencido</p>}
           {!result.allowed && m.status === 'vencido' && data.settings.allow_expired_override && <button type="button" className="btn btn-secondary" onClick={() => openModal(<Confirm title="Autorizar ingreso excepcional" message="Se registrará quién autorizó el ingreso con cuota vencida." onConfirm={() => checkin(m.id, 'manual', true)} />)}>Autorizar ingreso excepcional</button>}
-          {!result.allowed && can.desk && (m.status === 'vencido' || m.state === 'baja') && <button type="button" className="btn btn-primary" onClick={() => actions.payment(m.id)}>Renovar cuota</button>}
+          {!result.allowed && can.pay && (m.status === 'vencido' || m.state === 'baja') && <button type="button" className="btn btn-primary" onClick={() => actions.payment(m.id)}>Renovar cuota</button>}
         </div>}
       </section>
     </div>

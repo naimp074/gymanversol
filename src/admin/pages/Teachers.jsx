@@ -19,7 +19,7 @@ function TeacherModal({ teacher: t }) {
 
 export default function Teachers() {
   const { data, user, openModal } = useApp();
-  const admin = permissions(user.role).admin;
+  const admin = permissions(user).admin;
   const teachers = data.teachers;
   return <>
     <Heading title="El equipo que acompaña cada meta" sub="Profesores, especialidades y horarios de trabajo." actions={admin && <Button className="btn-primary" icon="plus" onClick={() => openModal(<TeacherModal />)}>Agregar profesor</Button>} />

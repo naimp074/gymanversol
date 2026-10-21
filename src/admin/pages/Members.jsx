@@ -34,7 +34,7 @@ export default function Members() {
     <section className="card">
       <div className="toolbar">
         <div className="search-field"><Icon name="search" size={18} /><input placeholder="Buscar por nombre, DNI, teléfono o número…" aria-label="Buscar socios" value={search} onChange={e => { setSearch(e.target.value); setPage(0); }} /></div>
-        <div className="toolbar-actions">{permissions(user.role).finance && <button type="button" className="btn btn-secondary" onClick={() => exportCsv(app, 'members')}><Icon name="download" size={17} />Exportar CSV</button>}</div>
+        <div className="toolbar-actions">{permissions(user).finance && <button type="button" className="btn btn-secondary" onClick={() => exportCsv(app, 'members')}><Icon name="download" size={17} />Exportar CSV</button>}</div>
       </div>
       {members.length ? <>
         <div className="table-wrap"><table className="data-table">

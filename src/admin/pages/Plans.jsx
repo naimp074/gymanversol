@@ -29,7 +29,7 @@ function PlanModal({ plan: p }) {
 
 export default function Plans() {
   const { data, user, openModal, toast } = useApp();
-  const admin = permissions(user.role).admin;
+  const admin = permissions(user).admin;
   const plans = data.plans;
   const toggle = p => openModal(<Confirm
     title={p.active === false ? 'Activar plan' : 'Desactivar plan'}

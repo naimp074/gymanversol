@@ -45,16 +45,27 @@ export const navGroups = [
   ['CRECIMIENTO', ['comunicaciones', 'reportes']]
 ];
 
-export function permissions(role) {
+// Apartados que permite cada rol: el máximo que el dueño puede habilitarle a un usuario.
+export const roleSections = role => Object.keys(pages).filter(key => pages[key].roles.includes(role));
+// Apartados que el usuario ve (la base ya los calcula: rol ∩ elegidos por el dueño).
+export const canSee = (user, route) => Boolean(user?.sections?.includes(route));
+
+// Qué puede hacer el usuario: su rol lo habilita y el apartado correspondiente tiene que estar visible.
+export function permissions(user) {
+  const role = user?.role;
+  const any = (...keys) => keys.some(key => canSee(user, key));
   const admin = adminRoles.includes(role);
   return {
     admin,
-    desk: deskRoles.includes(role),
-    finance: financeRoles.includes(role),
+    desk: deskRoles.includes(role) && any('socios'),
+    pay: financeRoles.includes(role) && any('socios', 'vencimientos', 'accesos'),
+    checkin: deskRoles.includes(role) && any('accesos'),
+    finance: financeRoles.includes(role) && any('vencimientos', 'caja', 'finanzas', 'reportes'),
+    financeRole: financeRoles.includes(role),
     trainer: admin || role === 'profesor',
-    schedule: admin || role === 'profesor',
-    reserve: admin || role === 'profesor' || role === 'recepcionista',
-    stock: admin || role === 'contador',
+    schedule: (admin || role === 'profesor') && any('clases'),
+    reserve: (admin || role === 'profesor' || role === 'recepcionista') && any('clases'),
+    stock: (admin || role === 'contador') && any('productos'),
     audit: admin || role === 'contador'
   };
 }

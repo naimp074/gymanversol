@@ -1,5 +1,5 @@
 import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { AppContext, pages, permissions } from './context.js';
+import { AppContext, pages, permissions, canSee } from './context.js';
 import { Icon } from './ui.jsx';
 import Auth from './Auth.jsx';
 import Shell from './Shell.jsx';
@@ -109,7 +109,7 @@ export default function AdminApp() {
 
   useEffect(() => {
     const onKey = e => {
-      if (e.key === 'F2' && data && permissions(data.user.role).desk && !modal) { e.preventDefault(); navigate('accesos'); }
+      if (e.key === 'F2' && data && permissions(data.user).checkin && !modal) { e.preventDefault(); navigate('accesos'); }
     };
     addEventListener('keydown', onKey);
     return () => removeEventListener('keydown', onKey);
@@ -119,7 +119,7 @@ export default function AdminApp() {
   useEffect(() => { document.body.classList.toggle('nav-open', navOpen); }, [navOpen]);
 
   const user = data?.user;
-  const safeRoute = user && pages[route]?.roles.includes(user.role) ? route : 'inicio';
+  const safeRoute = user && pages[route] && canSee(user, route) ? route : 'inicio';
   useEffect(() => { if (phase === 'app') document.title = `${pages[safeRoute].title} · Anversol`; }, [phase, safeRoute]);
 
   const context = useMemo(() => ({

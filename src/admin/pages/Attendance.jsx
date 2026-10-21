@@ -9,7 +9,7 @@ export default function Attendance() {
   const app = useApp();
   const { data, user } = app;
   const actions = useActions();
-  const can = permissions(user.role);
+  const can = permissions(user);
   const [chartDays, setChartDays] = useUi('chartDays');
   const admitted = data.checkins.filter(c => c.allowed);
   const period = admitted.filter(c => localDay(c.date) >= addDays(data.today, -29));

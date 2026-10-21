@@ -29,7 +29,7 @@ function RoutineView({ id }) {
   const { data, user, openModal, toast } = useApp();
   const r = data.routines.find(item => item.id === id);
   if (!r) return null;
-  const trainer = permissions(user.role).trainer;
+  const trainer = permissions(user).trainer;
   const remove = () => openModal(<Confirm title="Eliminar rutina" message="La rutina se eliminará. Esta operación quedará registrada en la auditoría." onConfirm={async () => { await rpc('delete_routine', { p_id: id }); toast('Rutina eliminada.'); }} />);
   return <Modal title={r.name} wide>
     <div className="report-document"><h3>{memberName(data, r.member_id)}</h3><p className="muted">{teacherName(data, r.teacher_id)} · {r.goal || 'Rutina personalizada'}</p><div className="routine-days">{r.days}</div>{r.notes && <p>{r.notes}</p>}</div>
@@ -39,7 +39,7 @@ function RoutineView({ id }) {
 
 export default function Routines() {
   const { data, user, openModal, toast } = useApp();
-  const trainer = permissions(user.role).trainer;
+  const trainer = permissions(user).trainer;
   const create = () => memberOptions(data).length ? openModal(<RoutineModal />) : toast('Registrá un socio antes de crear su rutina.', 'error');
   return <>
     <Heading title="Entrenamiento con dirección" sub="Rutinas personalizadas para acompañar a tus socios." actions={trainer && <Button className="btn-primary" icon="plus" onClick={create}>Crear rutina</Button>} />

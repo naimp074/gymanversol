@@ -31,9 +31,9 @@ function ProductModal({ product: p }) {
 export default function Products() {
   const app = useApp();
   const { data, user, openModal, navigate, ui } = app;
-  const can = permissions(user.role);
+  const can = permissions(user);
   const [search, setSearch] = useUi('productSearch');
-  if (!can.finance) return <Empty message="Tu perfil no tiene acceso a esta sección." />;
+  if (!can.financeRole) return <Empty message="Tu perfil no tiene acceso a esta sección." />;
   const products = data.products;
   const active = products.filter(p => p.active !== false);
   const visible = products.filter(p => productMatches(p, search));

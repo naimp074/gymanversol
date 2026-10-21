@@ -1,4 +1,4 @@
-import { useApp, useUi, permissions, pages } from '../context.js';
+import { useApp, useUi, permissions, canSee } from '../context.js';
 import { Badge, Empty, Icon, Metric } from '../ui.jsx';
 import { MemberCell, useActions } from '../actions.jsx';
 import { AttendanceChart, AccessTable, byDate, todayCheckins, isBirthday, dueSoon } from './shared.jsx';
@@ -7,7 +7,7 @@ import { money, localDay, addDays } from '../../lib/format.js';
 export default function Dashboard() {
   const { data, user, navigate } = useApp();
   const actions = useActions();
-  const can = permissions(user.role);
+  const can = permissions(user);
   const [chartDays, setChartDays] = useUi('chartDays');
   const [alertTab, setAlertTab] = useUi('dashboardAlert');
   const admitted = todayCheckins(data).filter(c => c.allowed);
@@ -44,14 +44,12 @@ export default function Dashboard() {
         <h2>Menos gestión.<br />Más movimiento.</h2>
         <p>Tu día a día, un poco más simple.</p>
         <div className="quick-actions">
-          {can.desk ? <>
-            <button type="button" onClick={() => actions.payment()}><Icon name="wallet" /><span>Registrar un pago</span><Icon name="arrow" size={18} /></button>
-            <button type="button" onClick={() => actions.memberForm()}><Icon name="users" /><span>Sumar un nuevo socio</span><Icon name="arrow" size={18} /></button>
-            <button type="button" onClick={() => navigate('accesos')}><Icon name="door" /><span>Registrar un ingreso</span><Icon name="arrow" size={18} /></button>
-          </> : <>
-            <button type="button" onClick={() => navigate('socios')}><Icon name="users" /><span>Consultar socios</span><Icon name="arrow" size={18} /></button>
-            <button type="button" onClick={() => navigate(user.role === 'profesor' ? 'rutinas' : 'reportes')}><Icon name="chart" /><span>{user.role === 'profesor' ? 'Ver rutinas' : 'Consultar reportes'}</span><Icon name="arrow" size={18} /></button>
-          </>}
+          {can.pay && <button type="button" onClick={() => actions.payment()}><Icon name="wallet" /><span>Registrar un pago</span><Icon name="arrow" size={18} /></button>}
+          {can.desk && <button type="button" onClick={() => actions.memberForm()}><Icon name="users" /><span>Sumar un nuevo socio</span><Icon name="arrow" size={18} /></button>}
+          {can.checkin && <button type="button" onClick={() => navigate('accesos')}><Icon name="door" /><span>Registrar un ingreso</span><Icon name="arrow" size={18} /></button>}
+          {!can.desk && canSee(user, 'socios') && <button type="button" onClick={() => navigate('socios')}><Icon name="users" /><span>Consultar socios</span><Icon name="arrow" size={18} /></button>}
+          {!can.pay && canSee(user, 'rutinas') && <button type="button" onClick={() => navigate('rutinas')}><Icon name="chart" /><span>Ver rutinas</span><Icon name="arrow" size={18} /></button>}
+          {!can.pay && canSee(user, 'reportes') && <button type="button" onClick={() => navigate('reportes')}><Icon name="chart" /><span>Consultar reportes</span><Icon name="arrow" size={18} /></button>}
         </div>
         <span className="quick-footer"><i></i>Un gran entrenamiento empieza acá.</span>
       </section>
@@ -61,7 +59,7 @@ export default function Dashboard() {
       <section className="card">
         <div className="card-head"><div><h2>Últimos ingresos</h2><p className="muted">La comunidad no se detiene</p></div><Badge tone="green">Hoy</Badge></div>
         <AccessTable list={byDate(todayCheckins(data)).slice(0, 5)} compact />
-        <a className="card-link" href="#" onClick={e => { e.preventDefault(); navigate(can.desk ? 'accesos' : 'asistencia'); }}>Ver todos los ingresos <Icon name="arrow" size={16} /></a>
+        <a className="card-link" href="#" onClick={e => { e.preventDefault(); navigate(can.checkin ? 'accesos' : 'asistencia'); }}>Ver todos los ingresos <Icon name="arrow" size={16} /></a>
       </section>
       <section className="card due-card">
         <div className="card-head"><div><h2>Para tener en cuenta</h2><p className="muted">Un pequeño recordatorio hace la diferencia</p></div><span className="soft-icon peach"><Icon name="bell" /></span></div>
@@ -73,12 +71,12 @@ export default function Dashboard() {
           {alertTab === 'birthday' ? <Badge tone="green">Hoy</Badge> : <Badge tone="amber">{m.days_left === 0 ? 'Vence hoy' : `En ${m.days_left} día${m.days_left === 1 ? '' : 's'}`}</Badge>}
           {can.desk && <button type="button" className="icon-btn" aria-label={`Mensaje para ${m.name}`} onClick={() => actions.whatsapp(m.id, alertTab === 'birthday' ? 'cumpleanos' : 'recordatorio')}><Icon name="message" size={18} /></button>}
         </div></div>) : <Empty message={alertTab === 'birthday' ? 'Hoy no hay cumpleaños.' : 'No hay cuotas por vencer en los próximos días.'} />}</div>
-        <a href="#" className="card-link" onClick={e => { e.preventDefault(); navigate(can.finance ? 'vencimientos' : 'socios'); }}>Ver socios <Icon name="arrow" size={16} /></a>
+        <a href="#" className="card-link" onClick={e => { e.preventDefault(); navigate(canSee(user, 'vencimientos') ? 'vencimientos' : 'socios'); }}>Ver socios <Icon name="arrow" size={16} /></a>
       </section>
     </div>
 
     <section className="card daily-classes">
-      <div className="card-head"><div><h2>La agenda de hoy</h2><p className="muted">Energía compartida, objetivos en común</p></div>{pages.clases.roles.includes(user.role) && <a href="#clases" onClick={e => { e.preventDefault(); navigate('clases'); }}>Ver agenda completa →</a>}</div>
+      <div className="card-head"><div><h2>La agenda de hoy</h2><p className="muted">Energía compartida, objetivos en común</p></div>{canSee(user, 'clases') && <a href="#clases" onClick={e => { e.preventDefault(); navigate('clases'); }}>Ver agenda completa →</a>}</div>
       <div className="class-strip">{todayClasses.length ? todayClasses.slice(0, 4).map(c => {
         const reserved = data.reservations.filter(r => r.class_id === c.id).length;
         return <div key={c.id} className="class-mini"><span className="class-time">{c.time}</span><div><strong>{c.name}</strong><small>{data.teachers.find(t => t.id === c.teacher_id)?.name || 'Sin profesor'}</small></div><span className="class-spots">{reserved}/{c.capacity}<small>reservas</small></span></div>;

@@ -46,7 +46,7 @@ export function AttendanceChart({ days }) {
 
 export function AccessTable({ list, compact = false }) {
   const { data, user, toast, refresh } = useApp();
-  const canDesk = permissions(user.role).desk;
+  const canDesk = permissions(user).checkin;
   if (!list.length) return <Empty message="Todavía no hay ingresos registrados." />;
   async function checkout(id) {
     try { await rpc('register_checkout', { p_id: id }); toast('Salida registrada.'); await refresh(); }

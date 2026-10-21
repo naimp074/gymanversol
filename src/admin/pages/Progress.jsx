@@ -68,7 +68,7 @@ function MeasurementView({ measurement: m }) {
 
 export default function Progress() {
   const { data, user, openModal, toast } = useApp();
-  const trainer = permissions(user.role).trainer;
+  const trainer = permissions(user).trainer;
   const members = memberOptions(data);
   const [selected, setSelected] = useUi('progressMember');
   const memberId = members.some(m => m.value === selected) ? selected : members[0]?.value || '';
