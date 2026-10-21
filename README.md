@@ -14,7 +14,14 @@ El sistema funciona en la nube: se usa desde cualquier PC, celular o tablet con 
 
 1. Crear un proyecto en [supabase.com](https://supabase.com).
 2. **Authentication → Sign In / Providers → Email**: dejar Email habilitado y **desactivar “Confirm email”**. El personal entra con nombre de usuario; el sistema lo convierte en un email interno que no recibe correos.
-3. **SQL Editor**: ejecutar, en orden, los archivos de [supabase/migrations/](supabase/migrations/): primero `20261021000000_init.sql` y después `20261021010000_realtime.sql`. (Con la CLI de Supabase también sirve `supabase db push`.)
+3. **Migraciones**: se aplican solas con GitHub Actions ([.github/workflows/supabase-migrations.yml](.github/workflows/supabase-migrations.yml)) cada vez que llega a `main` un archivo nuevo en [supabase/migrations/](supabase/migrations/). En el repo de GitHub, **Settings → Secrets and variables → Actions**, cargar:
+   - `SUPABASE_ACCESS_TOKEN`: supabase.com → Account → Access Tokens
+   - `SUPABASE_DB_PASSWORD`: la contraseña de la base elegida al crear el proyecto
+   - `SUPABASE_PROJECT_REF`: el código de la URL (`https://<ref>.supabase.co`)
+
+   Para la primera vez: **Actions → Migraciones de Supabase → Run workflow**. Para cambios futuros, crear un archivo nuevo (`npx supabase migration new nombre`) y nunca editar uno ya aplicado.
+
+   Si alguna migración ya se ejecutó a mano en el SQL Editor, marcarla como aplicada una vez para que no se repita: `npx supabase link --project-ref <ref>` y luego `npx supabase migration repair --status applied 20261021000000` (y/o `20261021010000`).
 
 **Tiempo real:** cualquier cambio (un cobro en otra PC, un ingreso en recepción o un dato editado en el Table Editor de Supabase) actualiza solas las pantallas abiertas del panel, el portal de socios y el sitio. Se transmite sólo un aviso con el nombre de la tabla que cambió; los datos se vuelven a pedir con los permisos del usuario.
 
