@@ -14,14 +14,12 @@ El sistema funciona en la nube: se usa desde cualquier PC, celular o tablet con 
 
 1. Crear un proyecto en [supabase.com](https://supabase.com).
 2. **Authentication → Sign In / Providers → Email**: dejar Email habilitado y **desactivar “Confirm email”**. El personal entra con nombre de usuario; el sistema lo convierte en un email interno que no recibe correos.
-3. **Migraciones**: se aplican solas con GitHub Actions ([.github/workflows/supabase-migrations.yml](.github/workflows/supabase-migrations.yml)) cada vez que llega a `main` un archivo nuevo en [supabase/migrations/](supabase/migrations/). En el repo de GitHub, **Settings → Secrets and variables → Actions**, cargar:
-   - `SUPABASE_ACCESS_TOKEN`: supabase.com → Account → Access Tokens
-   - `SUPABASE_DB_PASSWORD`: la contraseña de la base elegida al crear el proyecto
-   - `SUPABASE_PROJECT_REF`: el código de la URL (`https://<ref>.supabase.co`)
+3. **Migraciones**: se aplican solas con GitHub Actions ([.github/workflows/supabase-migrations.yml](.github/workflows/supabase-migrations.yml)) cada vez que llega a `main` un archivo nuevo en [supabase/migrations/](supabase/migrations/). La Action se conecta directo a la base; en el repo de GitHub, **Settings → Secrets and variables → Actions**, cargar un único secret:
+   - `SUPABASE_DB_URL`: en Supabase, botón **Connect → Session pooler → URI**, reemplazando `[YOUR-PASSWORD]` por la contraseña de la base. Si la contraseña tiene símbolos como `@ # / ? %`, conviene cambiarla por una sólo con letras y números (Project Settings → Database → Reset password).
 
    Para la primera vez: **Actions → Migraciones de Supabase → Run workflow**. Para cambios futuros, crear un archivo nuevo (`npx supabase migration new nombre`) y nunca editar uno ya aplicado.
 
-   Si alguna migración ya se ejecutó a mano en el SQL Editor, marcarla como aplicada una vez para que no se repita: `npx supabase link --project-ref <ref>` y luego `npx supabase migration repair --status applied 20261021000000` (y/o `20261021010000`).
+   Si alguna migración ya se ejecutó a mano en el SQL Editor, marcarla como aplicada una vez para que no se repita: `npx supabase migration repair --status applied 20261021000000 --db-url "<la misma URI>"` (y/o `20261021010000`).
 
 **Tiempo real:** cualquier cambio (un cobro en otra PC, un ingreso en recepción o un dato editado en el Table Editor de Supabase) actualiza solas las pantallas abiertas del panel, el portal de socios y el sitio. Se transmite sólo un aviso con el nombre de la tabla que cambió; los datos se vuelven a pedir con los permisos del usuario.
 

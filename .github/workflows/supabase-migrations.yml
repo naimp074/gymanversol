@@ -1,8 +1,10 @@
 # Aplica en Supabase las migraciones nuevas de supabase/migrations/ cada vez que llegan a main.
-# Secrets necesarios (Settings → Secrets and variables → Actions):
-#   SUPABASE_ACCESS_TOKEN  · supabase.com → Account → Access Tokens
-#   SUPABASE_DB_PASSWORD   · contraseña de la base elegida al crear el proyecto
-#   SUPABASE_PROJECT_REF   · el código de la URL: https://<ref>.supabase.co
+# Se conecta directo a la base, sin token de la API de Supabase.
+#
+# Secret necesario (Settings → Secrets and variables → Actions):
+#   SUPABASE_DB_URL · Supabase → botón "Connect" → "Session pooler" → URI, con la contraseña real
+#                     en lugar de [YOUR-PASSWORD]. Ejemplo:
+#                     postgresql://postgres.abcd1234:CLAVE@aws-0-sa-east-1.pooler.supabase.com:5432/postgres
 name: Migraciones de Supabase
 
 on:
@@ -19,9 +21,7 @@ jobs:
   migrate:
     runs-on: ubuntu-latest
     env:
-      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
-      SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
-      SUPABASE_PROJECT_REF: ${{ secrets.SUPABASE_PROJECT_REF }}
+      SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
     steps:
       - uses: actions/checkout@v4
 
@@ -29,11 +29,15 @@ jobs:
         with:
           version: latest
 
-      - name: Vincular el proyecto
-        run: supabase link --project-ref "$SUPABASE_PROJECT_REF"
+      - name: Verificar configuración
+        run: |
+          if [ -z "$SUPABASE_DB_URL" ]; then
+            echo "::error::Falta el secret SUPABASE_DB_URL (Supabase → Connect → Session pooler)."
+            exit 1
+          fi
 
       - name: Migraciones pendientes
-        run: supabase migration list
+        run: supabase migration list --db-url "$SUPABASE_DB_URL"
 
       - name: Aplicar migraciones
-        run: supabase db push
+        run: supabase db push --db-url "$SUPABASE_DB_URL"
