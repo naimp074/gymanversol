@@ -247,6 +247,11 @@ main { padding: 8px 28px 40px; }
 .access-entry-head h2 { font: 600 32px/1.1 var(--display); margin: 10px 0 8px; }
 .access-symbol { width: 72px; height: 72px; margin: 0 auto 8px; display: grid; place-items: center; border-radius: 24px; background: var(--peach); color: var(--coral-deep); }
 #access-form { display: grid; gap: 12px; }
+.access-matches { display: grid; gap: 6px; margin: 8px 0 12px; }
+.access-match { display: flex; align-items: center; gap: 10px; width: 100%; background: #fff; border: 1px solid var(--line-strong); border-radius: 12px; padding: 8px 10px; text-align: left; }
+.access-match:hover, .access-match:focus-visible { background: var(--bg); }
+.access-match > span:not([class]) { flex: 1; min-width: 0; }
+.access-match small { display: block; }
 .reader-note { display: flex; gap: 10px; margin-top: 16px; color: var(--muted); background: var(--bg); border-radius: 14px; padding: 12px; }
 .access-result { min-height: 360px; display: grid; place-items: center; text-align: center; }
 .waiting-pulse { width: 86px; height: 86px; border-radius: 50%; display: grid; place-items: center; background: var(--peach); color: var(--coral); margin-bottom: 8px; animation: pulse 1.8s ease infinite; }

@@ -9,8 +9,8 @@ export default function Expiry() {
   const actions = useActions();
   const canDesk = permissions(user).pay;
   const expired = data.members.filter(m => m.status === 'vencido');
-  const today = data.members.filter(m => m.days_left === 0 && m.state === 'activo');
-  const tomorrow = data.members.filter(m => m.days_left === 1 && m.state === 'activo');
+  const today = data.members.filter(m => m.days_left === 0 && m.status === 'activo');
+  const tomorrow = data.members.filter(m => m.days_left === 1 && m.status === 'activo');
   const due = dueSoon(data);
   const list = [...expired, ...due].sort((a, b) => String(a.expires_at).localeCompare(String(b.expires_at)));
   return <>

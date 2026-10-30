@@ -7,7 +7,7 @@ import { date, time, localDay, addDays } from '../../lib/format.js';
 export const byDate = list => [...list].sort((a, b) => String(b.date || b.created_at).localeCompare(String(a.date || a.created_at)));
 export const todayCheckins = data => data.checkins.filter(c => localDay(c.date) === data.today);
 export const isBirthday = (m, today) => m.birth_date?.slice(5) === today.slice(5);
-export const dueSoon = data => data.members.filter(m => m.state !== 'baja' && m.state !== 'suspendido' && m.days_left >= 0 && m.days_left <= 5).sort((a, b) => a.days_left - b.days_left);
+export const dueSoon = data => data.members.filter(m => m.status === 'activo' && m.days_left >= 0 && m.days_left <= 5).sort((a, b) => a.days_left - b.days_left);
 
 function trend(current, previous) {
   if (!previous) return <span className="muted">{current ? 'Actividad registrada' : 'Sin actividad'} en el período</span>;
