@@ -108,7 +108,7 @@ export function MemberDetail({ id }) {
       link.remove();
     } catch (error) { toast(error.message, 'error'); }
   }
-  const details = [['DNI', m.dni], ['Fecha de nacimiento', date(m.birth_date)], ['Teléfono', m.phone], ['WhatsApp', m.whatsapp], ['Email', m.email], ['Dirección', m.address], ['Fecha de alta', date(m.joined_at)], ['Vencimiento', date(m.expires_at)], ['Último pago', date(m.last_payment)], ['Contacto de emergencia', m.emergency_name !== undefined ? `${m.emergency_name || '—'} ${m.emergency_phone || ''}` : null], ['Apto físico', m.medical_expires_at !== undefined ? date(m.medical_expires_at) : null], ['Último ingreso', date(m.last_checkin)]];
+  const details = [['DNI', m.dni], ['Fecha de nacimiento', date(m.birth_date)], ['Teléfono', m.phone], ['WhatsApp', m.whatsapp], ['Email', m.email], ['Dirección', m.address], ['Fecha de alta', date(m.joined_at)], ['Vencimiento', m.paused_at ? `En pausa desde el ${date(m.paused_at)} · le quedan ${days(m.days_left)}` : date(m.expires_at)], ['Último pago', date(m.last_payment)], ['Contacto de emergencia', m.emergency_name !== undefined ? `${m.emergency_name || '—'} ${m.emergency_phone || ''}` : null], ['Apto físico', m.medical_expires_at !== undefined ? date(m.medical_expires_at) : null], ['Último ingreso', date(m.last_checkin)]];
   return <Modal title="Ficha del socio" wide>
     <div className="member-detail-hero"><Avatar person={m} /><div><span className="eyebrow">SOCIO #{m.number}</span><h2>{m.name}</h2><p>{m.plan_name || 'Sin membresía'}</p><StatusBadge member={m} /></div>
       {can.desk && <button type="button" className="btn btn-secondary" onClick={() => actions.memberForm(m.id)}><Icon name="edit" size={16} />Editar ficha</button>}</div>
@@ -116,7 +116,9 @@ export function MemberDetail({ id }) {
     {m.has_medical_file && <button type="button" className="btn btn-secondary" onClick={downloadMedical}><Icon name="download" size={16} />Descargar certificado</button>}
     {m.notes && <div className="info-box"><p>{m.notes}</p></div>}
     <div className="row-actions member-detail-actions">
-      {can.pay && <button type="button" className="btn btn-primary" onClick={() => actions.payment(m.id)}><Icon name="wallet" size={17} />Registrar pago</button>}
+      {can.pay && !m.paused_at && <button type="button" className="btn btn-primary" onClick={() => actions.payment(m.id)}><Icon name="wallet" size={17} />Registrar pago</button>}
+      {can.desk && m.status === 'activo' && <button type="button" className="btn btn-secondary" onClick={() => actions.confirm('Pausar membresía', `A ${m.name} le quedan ${days(m.days_left)}. Quedan congelados hasta que reanudes la membresía, y mientras tanto no podrá ingresar ni reservar clases.`, async () => { await rpc('pause_member', { p_member: m.id }); toast('Membresía en pausa.'); }, 'Pausar')}><Icon name="lock" size={17} />Pausar membresía</button>}
+      {can.desk && m.paused_at && <button type="button" className="btn btn-primary" onClick={() => actions.confirm('Reanudar membresía', `A ${m.name} le quedan ${days(m.days_left)}. El nuevo vencimiento será el ${date(addDays(data.today, m.days_left))}.`, async () => { await rpc('resume_member', { p_member: m.id }); toast('Membresía reanudada.'); }, 'Reanudar')}><Icon name="unlock" size={17} />Reanudar membresía</button>}
       {can.desk && <button type="button" className="btn btn-secondary" onClick={() => actions.whatsapp(m.id)}><Icon name="message" size={17} />WhatsApp</button>}
       <button type="button" className="btn btn-secondary" onClick={() => actions.credential(m.id)}><Icon name="qr" size={17} />Credencial</button>
     </div>

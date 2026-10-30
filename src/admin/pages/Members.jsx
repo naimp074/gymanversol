@@ -24,7 +24,7 @@ export default function Members() {
   const members = data.members.filter(m => (filter === 'todos' || m.status === filter) && [m.name, m.dni, m.phone, m.whatsapp, m.email, m.number].some(v => normalize(v).includes(query)));
   const pages = Math.max(1, Math.ceil(members.length / pageSize));
   const current = Math.min(page, pages - 1);
-  const pills = [['activo', 'Activos'], ['vencido', 'Vencidos'], ['suspendido', 'Suspendidos'], ['baja', 'Bajas']];
+  const pills = [['activo', 'Activos'], ['vencido', 'Vencidos'], ['pausado', 'En pausa'], ['suspendido', 'Suspendidos'], ['baja', 'Bajas']];
 
   return <>
     <div className="member-summary">
