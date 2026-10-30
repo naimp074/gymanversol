@@ -10,9 +10,12 @@ export const activeCash = data => data.cash_sessions.find(s => !s.closed_at);
 
 function OpenCash() {
   const { toast } = useApp();
-  return <Modal title="Abrir caja" onSubmit={async fd => { await rpc('cash_open', { p_opening: Number(fd.get('opening_amount')) }); toast('Caja abierta. Ya podés registrar operaciones.'); }}>
-    <p className="muted">Ingresá el efectivo disponible al comenzar el turno.</p>
-    <Field label="Fondo inicial (ARS)" name="opening_amount" type="number" defaultValue={0} required min="0" step="1" />
+  return <Modal title="Abrir caja" onSubmit={async fd => { await rpc('cash_open', { p_opening: Number(fd.get('opening_amount')), p_opening_transfer: Number(fd.get('opening_transfer')) }); toast('Caja abierta. Ya podés registrar operaciones.'); }}>
+    <p className="muted">Ingresá con cuánto dinero comienza el turno.</p>
+    <div className="form-grid">
+      <Field label="Efectivo inicial (ARS)" name="opening_amount" type="number" defaultValue={0} required min="0" step="1" />
+      <Field label="Transferencia inicial (ARS)" name="opening_transfer" type="number" defaultValue={0} required min="0" step="1" />
+    </div>
   </Modal>;
 }
 
@@ -56,7 +59,7 @@ export default function Cash() {
   return <>
     <div className="card cash-status">
       <div><div className="card-head"><h2 className="section-title">{session ? 'La caja está abierta' : 'Caja cerrada'}</h2><Badge tone={session ? 'green' : 'neutral'}>{session ? 'Operativa' : 'Sin turno abierto'}</Badge></div>
-        <p className="muted">{session ? `Apertura: ${fullDate(session.opened_at)} · Fondo inicial ${money(session.opening_amount)}` : 'Abrí un turno para registrar cobros, ventas y movimientos.'}</p></div>
+        <p className="muted">{session ? `Apertura: ${fullDate(session.opened_at)} · Efectivo inicial ${money(session.opening_amount)} · Transferencia inicial ${money(session.opening_transfer)}` : 'Abrí un turno para registrar cobros, ventas y movimientos.'}</p></div>
       <div className="toolbar-actions">{session ? <>
         <Button icon="plus" onClick={needOpen(() => openModal(<MovementModal kind="ingreso" />))}>Registrar ingreso</Button>
         <Button icon="minus" onClick={needOpen(() => openModal(<MovementModal kind="gasto" />))}>Gasto / retiro</Button>
@@ -69,7 +72,7 @@ export default function Cash() {
       <Stat title="Ingresos" value={money(income)} note="Cuotas, ventas y otros ingresos" icon="trending-up" />
       <Stat title="Gastos" value={money(expenses)} note={`Retiros: ${money(withdrawals)}`} icon="trending-down" />
       <Stat title="Balance del período" value={money(income - expenses - withdrawals)} note="Ingresos menos gastos y retiros" icon="wallet" />
-      <Stat title="Efectivo esperado" value={money(session ? session.expected_amount : 0)} note={session ? 'Incluye fondo inicial del turno' : 'Abrí la caja para comenzar'} icon="banknote" />
+      <Stat title="Efectivo esperado" value={money(session ? session.expected_amount : 0)} note={session ? 'Incluye efectivo inicial del turno' : 'Abrí la caja para comenzar'} icon="banknote" />
     </div>
     <div className="card"><div className="card-head"><h3 className="card-title">Ingresos por medio de pago</h3><span className="muted">{movements.filter(m => m.type === 'ingreso').length} operaciones</span></div>
       <div className="method-grid">{methods.map(method => <div key={method} className="metric-mini"><span className="muted">{method}</span><strong>{money(total(movements.filter(m => m.type === 'ingreso' && m.method === method)))}</strong></div>)}</div></div>
@@ -80,8 +83,8 @@ export default function Cash() {
         <td className={`amount ${m.type === 'ingreso' ? 'text-green' : 'text-red'}`}>{m.type === 'ingreso' ? '+' : '−'} {money(m.amount)}</td>
       </tr>)} /></div>
     <div className="card"><div className="card-head"><h3 className="card-title">Historial de turnos</h3></div>
-      <Table headers={['Apertura', 'Cierre', 'Inicial', 'Esperado', 'Contado', 'Diferencia']} rows={[...data.cash_sessions].sort((a, b) => b.opened_at.localeCompare(a.opened_at)).map(s => <tr key={s.id}>
-        <td>{fullDate(s.opened_at)}</td><td>{s.closed_at ? fullDate(s.closed_at) : <Badge tone="green">Abierta</Badge>}</td><td>{money(s.opening_amount)}</td>
+      <Table headers={['Apertura', 'Cierre', 'Efectivo inicial', 'Transf. inicial', 'Esperado', 'Contado', 'Diferencia']} rows={[...data.cash_sessions].sort((a, b) => b.opened_at.localeCompare(a.opened_at)).map(s => <tr key={s.id}>
+        <td>{fullDate(s.opened_at)}</td><td>{s.closed_at ? fullDate(s.closed_at) : <Badge tone="green">Abierta</Badge>}</td><td>{money(s.opening_amount)}</td><td>{money(s.opening_transfer)}</td>
         <td>{money(s.expected_amount)}</td><td>{s.closed_at ? money(s.counted_amount) : '—'}</td>
         <td>{s.closed_at ? <Badge tone={Number(s.difference) === 0 ? 'green' : 'red'}>{money(s.difference)}</Badge> : '—'}</td>
       </tr>)} /></div>
