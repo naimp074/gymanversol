@@ -12,7 +12,7 @@ export default function Dashboard() {
   const [alertTab, setAlertTab] = useUi('dashboardAlert');
   const admitted = todayCheckins(data).filter(c => c.allowed);
   const inside = admitted.filter(c => !c.checkout_at);
-  const activeMembers = data.members.filter(m => m.status === 'activo');
+  const activeMembers = data.members.filter(m => m.status === 'activo' || m.status === 'becado');
   const expired = data.members.filter(m => m.status === 'vencido');
   const todayPayments = data.payments.filter(p => localDay(p.date) === data.today);
   const weekNew = data.members.filter(m => m.joined_at >= addDays(data.today, -6));

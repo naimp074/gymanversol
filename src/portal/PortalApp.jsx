@@ -174,19 +174,20 @@ function WeightChart({ points }) {
 
 function StatusCard({ m }) {
   const paused = m.status === 'pausado';
+  const becado = m.status === 'becado';
   const counting = m.status === 'activo' || paused;
-  const tone = paused ? 'warn' : m.status === 'activo' ? (m.days_left <= 5 ? 'warn' : 'ok') : 'bad';
-  const ratio = counting ? Math.min(1, Math.max(0.04, m.days_left / 30)) : 0;
+  const tone = becado ? 'ok' : paused ? 'warn' : m.status === 'activo' ? (m.days_left <= 5 ? 'warn' : 'ok') : 'bad';
+  const ratio = becado ? 1 : counting ? Math.min(1, Math.max(0.04, m.days_left / 30)) : 0;
   const circumference = 2 * Math.PI * 44;
-  const label = paused ? 'Membresía en pausa' : m.status === 'activo' ? (m.days_left === 0 ? 'Vence hoy' : `Vence en ${plural(m.days_left, 'día', 'días')}`) : m.status === 'suspendido' ? 'Cuota suspendida' : 'Cuota vencida';
+  const label = becado ? 'Socio becado' : paused ? 'Membresía en pausa' : m.status === 'activo' ? (m.days_left === 0 ? 'Vence hoy' : `Vence en ${plural(m.days_left, 'día', 'días')}`) : m.status === 'suspendido' ? 'Cuota suspendida' : 'Cuota vencida';
   return <section className={`p-card status ${tone}`}>
-    <div className="ring"><svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="44" className="ring-bg" /><circle cx="50" cy="50" r="44" className="ring-fg" style={{ strokeDasharray: circumference, strokeDashoffset: circumference * (1 - ratio) }} /></svg><div><strong>{counting ? Math.max(0, m.days_left) : '!'}</strong><small>{counting ? 'días' : ''}</small></div></div>
+    <div className="ring"><svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="44" className="ring-bg" /><circle cx="50" cy="50" r="44" className="ring-fg" style={{ strokeDasharray: circumference, strokeDashoffset: circumference * (1 - ratio) }} /></svg><div><strong>{becado ? '✓' : counting ? Math.max(0, m.days_left) : '!'}</strong><small>{counting ? 'días' : ''}</small></div></div>
     <div className="status-copy">
       <span className="kicker">Tu membresía</span>
       <h2>{m.plan_name}</h2>
       <p className="status-label">{label}</p>
-      <p className="muted">{paused ? `Te quedan ${plural(m.days_left, 'día', 'días')} para cuando vuelvas` : m.expires_at ? `${m.status === 'activo' ? 'Vigente hasta el' : 'Venció el'} ${longDate(m.expires_at)}` : 'Todavía no registramos un pago.'}{m.start_time ? ` · Horario ${m.start_time} a ${m.end_time}` : ''}{m.access_limit ? ` · ${m.access_limit} ingresos por período` : ''}</p>
-      {paused ? <p className="status-hint">Avisá en recepción cuando vuelvas para reanudarla.</p> : (m.status !== 'activo' || m.days_left <= 5) && <p className="status-hint">Renová en recepción y conservás los días que te queden.</p>}
+      <p className="muted">{becado ? 'Tu membresía no tiene vencimiento' : paused ? `Te quedan ${plural(m.days_left, 'día', 'días')} para cuando vuelvas` : m.expires_at ? `${m.status === 'activo' ? 'Vigente hasta el' : 'Venció el'} ${longDate(m.expires_at)}` : 'Todavía no registramos un pago.'}{m.start_time ? ` · Horario ${m.start_time} a ${m.end_time}` : ''}{m.access_limit ? ` · ${m.access_limit} ingresos por período` : ''}</p>
+      {paused ? <p className="status-hint">Avisá en recepción cuando vuelvas para reanudarla.</p> : !becado && (m.status !== 'activo' || m.days_left <= 5) &&<p className="status-hint">Renová en recepción y conservás los días que te queden.</p>}
     </div>
   </section>;
 }

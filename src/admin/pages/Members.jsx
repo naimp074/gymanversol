@@ -24,7 +24,7 @@ export default function Members() {
   const members = data.members.filter(m => (filter === 'todos' || m.status === filter) && [m.name, m.dni, m.phone, m.whatsapp, m.email, m.number].some(v => normalize(v).includes(query)));
   const pages = Math.max(1, Math.ceil(members.length / pageSize));
   const current = Math.min(page, pages - 1);
-  const pills = [['activo', 'Activos'], ['vencido', 'Vencidos'], ['pausado', 'En pausa'], ['suspendido', 'Suspendidos'], ['baja', 'Bajas']];
+  const pills = [['activo', 'Activos'], ['becado', 'Becados'], ['vencido', 'Vencidos'], ['pausado', 'En pausa'], ['suspendido', 'Suspendidos'], ['baja', 'Bajas']];
 
   return <>
     <div className="member-summary">
@@ -40,7 +40,7 @@ export default function Members() {
         <div className="table-wrap"><table className="data-table">
           <thead><tr><th>Socio</th><th>DNI</th><th>Plan</th><th>Vencimiento</th><th>Estado</th><th>Constancia</th><th></th></tr></thead>
           <tbody>{members.slice(current * pageSize, (current + 1) * pageSize).map(m => <tr key={m.id}>
-            <td><MemberCell member={m} /></td><td className="muted mono">{m.dni}</td><td>{m.plan_name || 'Sin plan'}</td><td>{date(m.expires_at)}</td><td><StatusBadge member={m} /></td><td title={`${constancy.get(m.id).last30} días en los últimos 30`}><Badge tone={constancy.get(m.id).frequency.tone}>{constancy.get(m.id).frequency.label}</Badge></td>
+            <td><MemberCell member={m} /></td><td className="muted mono">{m.dni}</td><td>{m.plan_name || 'Sin plan'}</td><td>{m.becado ? 'Sin vencimiento' : date(m.expires_at)}</td><td><StatusBadge member={m} /></td><td title={`${constancy.get(m.id).last30} días en los últimos 30`}><Badge tone={constancy.get(m.id).frequency.tone}>{constancy.get(m.id).frequency.label}</Badge></td>
             <td><button type="button" className="icon-btn" aria-label={`Ver ficha de ${m.name}`} onClick={() => memberDetail(m.id)}><Icon name="chevron" size={18} /></button></td>
           </tr>)}</tbody>
         </table></div>

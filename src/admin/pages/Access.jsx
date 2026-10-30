@@ -94,7 +94,7 @@ export default function Access() {
           <h2>{m.name}</h2>
           <Badge tone={result.allowed ? 'green' : 'red'}>{result.allowed ? 'ACCESO HABILITADO' : 'ACCESO DENEGADO'}</Badge>
           <p>{result.reason || 'Que tengas un gran entrenamiento.'}</p>
-          <div className="access-meta"><span>Plan<strong>{m.plan_name || 'Sin plan'}</strong></span><span>Vencimiento<strong>{m.paused_at ? `En pausa · ${m.days_left} días` : date(m.expires_at)}</strong></span></div>
+          <div className="access-meta"><span>Plan<strong>{m.plan_name || 'Sin plan'}</strong></span><span>Vencimiento<strong>{m.becado ? 'Sin vencimiento' : m.paused_at ? `En pausa · ${m.days_left} días` : date(m.expires_at)}</strong></span></div>
           {isBirthday(m, data.today) && <p>🎂 ¡Hoy es tu cumpleaños!</p>}
           {m.medical_expires_at && m.medical_expires_at < data.today && <p className="amber-text">Apto físico vencido</p>}
           {!result.allowed && m.status === 'vencido' && data.settings.allow_expired_override && <button type="button" className="btn btn-secondary" onClick={() => openModal(<Confirm title="Autorizar ingreso excepcional" message="Se registrará quién autorizó el ingreso con cuota vencida." onConfirm={() => checkin(m.id, 'manual', true)} />)}>Autorizar ingreso excepcional</button>}
