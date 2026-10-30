@@ -51,7 +51,7 @@ function MemberPayments({ payments, plans, today }) {
 }
 
 export function MemberForm({ id }) {
-  const { data, toast } = useApp();
+  const { data, user, toast } = useApp();
   const m = data.members.find(x => x.id === id) || {};
   async function save(fd) {
     const body = Object.fromEntries([...fd].filter(([key]) => !key.endsWith('_upload')));
@@ -77,12 +77,13 @@ export function MemberForm({ id }) {
       <Field label="Teléfono de emergencia" name="emergency_phone" type="tel" defaultValue={m.emergency_phone} />
       <Field label="Fecha de alta" name="joined_at" type="date" defaultValue={m.joined_at || data.today} required />
       <SelectField label="Estado del socio" name="state" defaultValue={m.state || 'activo'} options={[{ value: 'activo', label: 'Activo (según su cuota)' }, { value: 'suspendido', label: 'Suspendido' }, { value: 'baja', label: 'Baja' }]} />
+      {permissions(user).admin && <SelectField label="Tipo de socio" name="becado" defaultValue={m.becado ? 'true' : 'false'} options={[{ value: 'false', label: 'Paga cuota' }, { value: 'true', label: 'Becado (no paga ni vence)' }]} />}
       <Field label="Vencimiento del apto físico" name="medical_expires_at" type="date" defaultValue={m.medical_expires_at} />
       <label className="field"><span>Foto del socio · cámara o galería</span><input name="photo_upload" type="file" accept="image/*" capture="environment" /></label>
       <label className="field full"><span>Certificado médico · foto, galería o PDF</span><input name="medical_upload" type="file" accept="image/*,application/pdf" /></label>
       <TextArea label="Observaciones" name="notes" className="full" rows={3} maxLength={3000} defaultValue={m.notes} />
     </div>
-    <p className="muted small">La membresía se activa al registrar un pago. La huella se podrá asociar cuando se integre un lector compatible.</p>
+    <p className="muted small">La membresía se activa al registrar un pago, salvo en los socios becados. La huella se podrá asociar cuando se integre un lector compatible.</p>
   </Modal>;
 }
 
@@ -108,7 +109,7 @@ export function MemberDetail({ id }) {
       link.remove();
     } catch (error) { toast(error.message, 'error'); }
   }
-  const details = [['DNI', m.dni], ['Fecha de nacimiento', date(m.birth_date)], ['Teléfono', m.phone], ['WhatsApp', m.whatsapp], ['Email', m.email], ['Dirección', m.address], ['Fecha de alta', date(m.joined_at)], ['Vencimiento', m.paused_at ? `En pausa desde el ${date(m.paused_at)} · le quedan ${days(m.days_left)}` : date(m.expires_at)], ['Último pago', date(m.last_payment)], ['Contacto de emergencia', m.emergency_name !== undefined ? `${m.emergency_name || '—'} ${m.emergency_phone || ''}` : null], ['Apto físico', m.medical_expires_at !== undefined ? date(m.medical_expires_at) : null], ['Último ingreso', date(m.last_checkin)]];
+  const details = [['DNI', m.dni], ['Fecha de nacimiento', date(m.birth_date)], ['Teléfono', m.phone], ['WhatsApp', m.whatsapp], ['Email', m.email], ['Dirección', m.address], ['Fecha de alta', date(m.joined_at)], ['Vencimiento', m.becado ? 'Sin vencimiento · socio becado' : m.paused_at ? `En pausa desde el ${date(m.paused_at)} · le quedan ${days(m.days_left)}` : date(m.expires_at)], ['Último pago', date(m.last_payment)], ['Contacto de emergencia', m.emergency_name !== undefined ? `${m.emergency_name || '—'} ${m.emergency_phone || ''}` : null], ['Apto físico', m.medical_expires_at !== undefined ? date(m.medical_expires_at) : null], ['Último ingreso', date(m.last_checkin)]];
   return <Modal title="Ficha del socio" wide>
     <div className="member-detail-hero"><Avatar person={m} /><div><span className="eyebrow">SOCIO #{m.number}</span><h2>{m.name}</h2><p>{m.plan_name || 'Sin membresía'}</p><StatusBadge member={m} /></div>
       {can.desk && <button type="button" className="btn btn-secondary" onClick={() => actions.memberForm(m.id)}><Icon name="edit" size={16} />Editar ficha</button>}</div>
@@ -116,7 +117,7 @@ export function MemberDetail({ id }) {
     {m.has_medical_file && <button type="button" className="btn btn-secondary" onClick={downloadMedical}><Icon name="download" size={16} />Descargar certificado</button>}
     {m.notes && <div className="info-box"><p>{m.notes}</p></div>}
     <div className="row-actions member-detail-actions">
-      {can.pay && !m.paused_at && <button type="button" className="btn btn-primary" onClick={() => actions.payment(m.id)}><Icon name="wallet" size={17} />Registrar pago</button>}
+      {can.pay && !m.paused_at && !m.becado && <button type="button" className="btn btn-primary" onClick={() => actions.payment(m.id)}><Icon name="wallet" size={17} />Registrar pago</button>}
       {can.desk && m.status === 'activo' && <button type="button" className="btn btn-secondary" onClick={() => actions.confirm('Pausar membresía', `A ${m.name} le quedan ${days(m.days_left)}. Quedan congelados hasta que reanudes la membresía, y mientras tanto no podrá ingresar ni reservar clases.`, async () => { await rpc('pause_member', { p_member: m.id }); toast('Membresía en pausa.'); }, 'Pausar')}><Icon name="lock" size={17} />Pausar membresía</button>}
       {can.desk && m.paused_at && <button type="button" className="btn btn-primary" onClick={() => actions.confirm('Reanudar membresía', `A ${m.name} le quedan ${days(m.days_left)}. El nuevo vencimiento será el ${date(addDays(data.today, m.days_left))}.`, async () => { await rpc('resume_member', { p_member: m.id }); toast('Membresía reanudada.'); }, 'Reanudar')}><Icon name="unlock" size={17} />Reanudar membresía</button>}
       {can.desk && <button type="button" className="btn btn-secondary" onClick={() => actions.whatsapp(m.id)}><Icon name="message" size={17} />WhatsApp</button>}
@@ -142,7 +143,7 @@ function CashClosed() {
 export function PaymentForm({ id }) {
   const { data, user, toast, closeModal } = useApp();
   const plans = data.plans.filter(p => p.active !== false);
-  const members = data.members;
+  const members = data.members.filter(m => !m.becado);
   const fallback = members.find(m => m.id === id) || members[0];
   const [memberId, setMemberId] = useState(fallback?.id || '');
   const [planId, setPlanId] = useState(fallback?.plan_id && plans.some(p => p.id === fallback.plan_id) ? fallback.plan_id : plans[0]?.id || '');

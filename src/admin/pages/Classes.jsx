@@ -29,7 +29,7 @@ function Reservations({ classId }) {
   if (!c) return null;
   const reservations = data.reservations.filter(r => r.class_id === classId);
   const canBook = can.reserve && c.date >= data.today && reservations.length < c.capacity;
-  const available = data.members.filter(m => m.status === 'activo' && (!m.expires_at || m.expires_at >= c.date) && !reservations.some(r => r.member_id === m.id));
+  const available = data.members.filter(m => (m.status === 'becado' || (m.status === 'activo' && (!m.expires_at || m.expires_at >= c.date))) &&!reservations.some(r => r.member_id === m.id));
   async function cancel(id) {
     try { await rpc('delete_reservation', { p_id: id }); await refresh(); toast('Reserva cancelada.'); }
     catch (error) { toast(error.message, 'error'); }

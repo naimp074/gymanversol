@@ -53,6 +53,7 @@ export const Metric = ({ label, value, detail, icon, tone = 'peach' }) =>
 
 export function StatusBadge({ member: m }) {
   if (m.status === 'activo') return <Badge tone={m.days_left <= 5 ? 'amber' : 'green'}>{m.days_left <= 5 ? 'Vence pronto' : 'Activo'}</Badge>;
+  if (m.status === 'becado') return <Badge tone="green">Becado</Badge>;
   if (m.status === 'pausado') return <Badge tone="amber">{`En pausa · ${m.days_left} ${m.days_left === 1 ? 'día' : 'días'}`}</Badge>;
   return <Badge tone={m.status === 'vencido' ? 'red' : 'neutral'}>{{ vencido: 'Vencido', suspendido: 'Suspendido', baja: 'Baja' }[m.status] || m.status}</Badge>;
 }
